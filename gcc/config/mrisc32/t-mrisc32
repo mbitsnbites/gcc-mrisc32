@@ -1,6 +1,6 @@
 # Target Makefile Fragment for MRISC32
-# Copyright (C) 2008-2019 Free Software Foundation, Inc.
-# Contributed by Marcus Geelnard.
+# Copyright (C) 2008-2020 Free Software Foundation, Inc.
+# Contributed by Marcus Geelnard <m@bitsnbites.eu>
 #
 # This file is part of GCC.
 #
