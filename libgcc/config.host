@@ -124,6 +124,9 @@ ft32*)	cpu_type=ft32
 	;;
 moxie*)	cpu_type=moxie
 	;;
+mrisc32*)
+	cpu_type=mrisc32
+	;;
 i[34567]86-*-*)
 	cpu_type=i386
 	;;
@@ -1061,6 +1064,10 @@ mn10300-*-*)
 	;;
 moxie-*-elf | moxie-*-moxiebox* | moxie-*-uclinux* | moxie-*-rtems*)
 	tmake_file="$tmake_file moxie/t-moxie t-softfp-sfdf t-softfp-excl t-softfp"
+	extra_parts="$extra_parts crti.o crtn.o crtbegin.o crtend.o"
+	;;
+mrisc32-*-elf)
+	tmake_file="$tmake_file mrisc32/t-moxie t-softfp-sfdf t-softfp-excl t-softfp"
 	extra_parts="$extra_parts crti.o crtn.o crtbegin.o crtend.o"
 	;;
 msp430-*-elf*)
