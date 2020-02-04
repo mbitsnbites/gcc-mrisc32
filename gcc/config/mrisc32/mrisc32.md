@@ -698,39 +698,41 @@
      (clobber (match_scratch:SI 2))])]
   ""
 {
-  /* If this is a store, force the value into a register.  */
-  /* TODO(m): Use the z register instead of loading #0 into a register.  */
-  if (! (reload_in_progress || reload_completed))
-  {
-    if (MEM_P (operands[0]))
-      {
-	operands[1] = force_reg (SImode, operands[1]);
-	if (MEM_P (XEXP (operands[0], 0)))
-	  operands[0] = gen_rtx_MEM (SImode, force_reg (SImode, XEXP (operands[0], 0)));
-      }
-    else
-      {
-	if (MEM_P (operands[1]) && MEM_P (XEXP (operands[1], 0)))
-	  operands[1] = gen_rtx_MEM (SImode, force_reg (SImode, XEXP (operands[1], 0)));
-      }
-  }
+  /* If this is a store, force the value into a register. If the source is
+     the constant value zero, we can use the z register.  */
+  if (MEM_P (operands[0])
+      && !(CONST_INT_P (operands[1]) && INTVAL (operands[1]) == 0))
+    {
+      operands[1] = force_reg (SImode, operands[1]);
+    }
 })
 
-(define_insn "*movsi"
+(define_insn "*movsi_load"
   [(parallel
-    [(set (match_operand:SI 0 "nonimmediate_operand"      "=r,r,r,A,r,  BCW")
-	  (match_operand:SI 1 "mrisc32_int_movsrc_operand" "r,i,A,r,BCW,r"))
-     (clobber (match_scratch:SI 2 "=X,X,X,&r,X,X"))])]
+    [(set (match_operand:SI 0 "register_operand"          "=r,r,r,r")
+	  (match_operand:SI 1 "mrisc32_int_movsrc_operand" "r,i,A,BCW"))
+     (clobber (match_scratch:SI 2 "=X,X,X,X"))])]
   ""
   "@
    mov\\t%0, %1
    *return mrisc32_emit_load_immediate (operands[0], operands[1]);
    addpchi\\t%0, #%1@pchi\;ldw\\t%0, %0, #%1+4@pclo
-   addpchi\\t%2, #%0@pchi\;stw\\t%1, %2, #%0+4@pclo
-   ldw\\t%0, %1
-   stw\\t%1, %0"
+   ldw\\t%0, %1"
   ;; TODO(m): Dynamically calculate the length for LDI.
-  [(set_attr "length" "4,8,8,8,4,4")])
+  [(set_attr "length" "4,8,8,4")])
+
+(define_insn "*movsi_store"
+  [(parallel
+    [(set (match_operand:SI 0 "memory_operand"                 "=A,A,BCW,BCW")
+	  (match_operand:SI 1 "mrisc32_reg_or_int_zero_operand" "r,O,r  ,O"))
+     (clobber (match_scratch:SI 2 "=&r,&r,X,X"))])]
+  ""
+  "@
+   addpchi\\t%2, #%0@pchi\;stw\\t%1, %2, #%0+4@pclo
+   addpchi\\t%2, #%0@pchi\;stw\\tz, %2, #%0+4@pclo
+   stw\\t%1, %0
+   stw\\tz, %0"
+  [(set_attr "length" "8,8,4,4")])
 
 
 ;; HImode
@@ -762,25 +764,40 @@
      (clobber (match_scratch:SI 2))])]
   ""
 {
-  /* If this is a store, force the value into a register.  */
-  if (MEM_P (operands[0]))
-    operands[1] = force_reg (HImode, operands[1]);
+  /* If this is a store, force the value into a register. If the source is
+     the constant value zero, we can use the z register.  */
+  if (MEM_P (operands[0])
+      && !(CONST_INT_P (operands[1]) && INTVAL (operands[1]) == 0))
+    {
+      operands[1] = force_reg (HImode, operands[1]);
+    }
 })
 
-(define_insn "*movhi"
+(define_insn "*movhi_load"
   [(parallel
-    [(set (match_operand:HI 0 "nonimmediate_operand"      "=r,r,r,A,r,  BCW")
-	  (match_operand:HI 1 "mrisc32_int_movsrc_operand" "r,J,A,r,BCW,r"))
-     (clobber (match_scratch:SI 2 "=X,X,X,&r,X,X"))])]
+    [(set (match_operand:HI 0 "register_operand"          "=r,r,r,r")
+	  (match_operand:HI 1 "mrisc32_int_movsrc_operand" "r,J,A,BCW"))
+     (clobber (match_scratch:SI 2 "=X,X,X,X"))])]
   ""
   "@
    mov\\t%0, %1
    ldi\\t%0, #%1
    addpchi\\t%0, #%1@pchi\;lduh\\t%0, %0, #%1+4@pclo
+   lduh\\t%0, %1"
+  [(set_attr "length" "4,4,8,4")])
+
+(define_insn "*movhi_store"
+  [(parallel
+    [(set (match_operand:HI 0 "memory_operand"                 "=A,A,BCW,BCW")
+	  (match_operand:HI 1 "mrisc32_reg_or_int_zero_operand" "r,O,r  ,O"))
+     (clobber (match_scratch:SI 2 "=&r,&r,X,X"))])]
+  ""
+  "@
    addpchi\\t%2, #%0@pchi\;sth\\t%1, %2, #%0+4@pclo
-   lduh\\t%0, %1
-   sth\\t%1, %0"
-  [(set_attr "length" "4,4,8,8,4,4")])
+   addpchi\\t%2, #%0@pchi\;sth\\tz, %2, #%0+4@pclo
+   sth\\t%1, %0
+   sth\\tz, %0"
+  [(set_attr "length" "8,8,4,4")])
 
 
 ;; QImode
@@ -812,25 +829,40 @@
      (clobber (match_scratch:SI 2))])]
   ""
 {
-  /* If this is a store, force the value into a register.  */
-  if (MEM_P (operands[0]))
-    operands[1] = force_reg (QImode, operands[1]);
+  /* If this is a store, force the value into a register. If the source is
+     the constant value zero, we can use the z register.  */
+  if (MEM_P (operands[0])
+      && !(CONST_INT_P (operands[1]) && INTVAL (operands[1]) == 0))
+    {
+      operands[1] = force_reg (QImode, operands[1]);
+    }
 })
 
-(define_insn "*movqi"
+(define_insn "*movqi_load"
   [(parallel
-    [(set (match_operand:QI 0 "nonimmediate_operand"      "=r,r,r,A,r,  BCW")
-	  (match_operand:QI 1 "mrisc32_int_movsrc_operand" "r,J,A,r,BCW,r"))
-     (clobber (match_scratch:SI 2 "=X,X,X,&r,X,X"))])]
+    [(set (match_operand:QI 0 "register_operand"          "=r,r,r,r")
+	  (match_operand:QI 1 "mrisc32_int_movsrc_operand" "r,J,A,BCW"))
+     (clobber (match_scratch:SI 2 "=X,X,X,X"))])]
   ""
   "@
    mov\\t%0, %1
    ldi\\t%0, #%1
    addpchi\\t%0, #%1@pchi\;ldub\\t%0, %0, #%1+4@pclo
+   ldub\\t%0, %1"
+  [(set_attr "length" "4,4,8,4")])
+
+(define_insn "*movqi_store"
+  [(parallel
+    [(set (match_operand:QI 0 "memory_operand"                 "=A,A,BCW,BCW")
+	  (match_operand:QI 1 "mrisc32_reg_or_int_zero_operand" "r,O,r,  O"))
+     (clobber (match_scratch:SI 2 "=&r,&r,X,X"))])]
+  ""
+  "@
    addpchi\\t%2, #%0@pchi\;stb\\t%1, %2, #%0+4@pclo
-   ldub\\t%0, %1
-   stb\\t%1, %0"
-  [(set_attr "length" "4,4,8,8,4,4")])
+   addpchi\\t%2, #%0@pchi\;stb\\tz, %2, #%0+4@pclo
+   stb\\t%1, %0
+   stb\\t%1, z"
+  [(set_attr "length" "8,8,4,4")])
 
 
 ;; SFmode
@@ -842,38 +874,42 @@
      (clobber (match_scratch:SI 2))])]
   ""
 {
-  /* If this is a store, force the value into a register.  */
-  if (! (reload_in_progress || reload_completed))
-  {
-    if (MEM_P (operands[0]))
+  /* If this is a store, force the value into a register. If the source is
+     the constant value zero, we can use the z register.  */
+  if (MEM_P (operands[0])
+      && !(CONST_DOUBLE_P (operands[1]) && real_equal (CONST_DOUBLE_REAL_VALUE (operands[1]), &dconst0)))
     {
       operands[1] = force_reg (SFmode, operands[1]);
-      if (MEM_P (XEXP (operands[0], 0)))
-        operands[0] = gen_rtx_MEM (SFmode, force_reg (SFmode, XEXP (operands[0], 0)));
     }
-    else
-      if (MEM_P (operands[1])
-          && MEM_P (XEXP (operands[1], 0)))
-        operands[1] = gen_rtx_MEM (SFmode, force_reg (SFmode, XEXP (operands[1], 0)));
-  }
 })
 
-(define_insn "*movsf"
+(define_insn "*movsf_load"
   [(parallel
-    [(set (match_operand:SF 0 "nonimmediate_operand"        "=r,r,r,A,r,  BCW")
-	  (match_operand:SF 1 "mrisc32_float_movsrc_operand" "r,F,A,r,BCW,r"))
-     (clobber (match_scratch:SI 2 "=X,X,X,&r,X,X"))])]
-  "register_operand (operands[0], SFmode)
-   || register_operand (operands[1], SFmode)"
+    [(set (match_operand:SF 0 "register_operand"            "=r,r,r,r")
+	  (match_operand:SF 1 "mrisc32_float_movsrc_operand" "r,F,A,BCW"))
+     (clobber (match_scratch:SI 2 "=X,X,X,X"))])]
+  ""
   "@
    mov\\t%0, %1
    *return mrisc32_emit_load_immediate (operands[0], operands[1]);
    addpchi\\t%0, #%1@pchi\;ldw\\t%0, %0, #%1+4@pclo
-   addpchi\\t%2, #%0@pchi\;stw\\t%1, %2, #%0+4@pclo
-   ldw\\t%0, %1
-   stw\\t%1, %0"
+   ldw\\t%0, %1"
   ;; TODO(m): Dynamically calculate the length for LDI.
-  [(set_attr "length" "4,8,8,8,4,4")])
+  [(set_attr "length" "4,8,8,4")])
+
+(define_insn "*movsf_store"
+  [(parallel
+    [(set (match_operand:SF 0 "memory_operand"                 "=A,A,BCW,BCW")
+	  (match_operand:SF 1 "mrisc32_reg_or_dbl_zero_operand" "r,Z,r  ,Z"))
+     (clobber (match_scratch:SI 2 "=&r,&r,X,X"))])]
+  ""
+  "@
+   addpchi\\t%2, #%0@pchi\;stw\\t%1, %2, #%0+4@pclo
+   addpchi\\t%2, #%0@pchi\;stw\\tz, %2, #%0+4@pclo
+   stw\\t%1, %0
+   stw\\tz, %0"
+  [(set_attr "length" "8,8,4,4")])
+
 
 
 ;; -------------------------------------------------------------------------
