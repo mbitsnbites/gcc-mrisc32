@@ -18,7 +18,6 @@ along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
 
 extern const char *mrisc32_emit_load_immediate (rtx, rtx);
-extern const char *mrisc32_emit_load_immediate_float (rtx, rtx);
 extern void mrisc32_expand_conditional_branch (rtx *);
 extern void mrisc32_expand_scc (rtx *);
 extern void mrisc32_expand_call (rtx retval, rtx fnaddr, rtx callarg1, bool sibcall);

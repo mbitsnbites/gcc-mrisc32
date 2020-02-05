@@ -380,6 +380,12 @@ mrisc32_emit_load_immediate (rtx dst, rtx src)
     {
       mrisc32_emit_load_immediate_int (dst, INTVAL (src));
     }
+  else if (GET_CODE (src) == CONST_DOUBLE)
+    {
+      long l;
+      REAL_VALUE_TO_TARGET_SINGLE (*CONST_DOUBLE_REAL_VALUE (src), l);
+      mrisc32_emit_load_immediate_int (dst, (int) l);
+    }
   else if (SYMBOL_REF_P (src))
     {
       mrisc32_emit_load_immediate_sym_plus_int (dst, src, 0);
@@ -404,18 +410,6 @@ mrisc32_emit_load_immediate (rtx dst, rtx src)
     {
       abort ();
     }
-
-  return "";
-}
-
-const char *
-mrisc32_emit_load_immediate_float (rtx dst, rtx src)
-{
-  gcc_assert (GET_CODE (src) == CONST_DOUBLE);
-
-  long l;
-  REAL_VALUE_TO_TARGET_SINGLE (*CONST_DOUBLE_REAL_VALUE (src), l);
-  mrisc32_emit_load_immediate_int (dst, (int) l);
 
   return "";
 }

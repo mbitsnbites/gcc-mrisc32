@@ -819,7 +819,7 @@
    || register_operand (operands[1], SFmode)"
   "@
    mov\\t%0, %1
-   *return mrisc32_emit_load_immediate_float (operands[0], operands[1]);
+   *return mrisc32_emit_load_immediate (operands[0], operands[1]);
    ldw\\t%0, %1
    stw\\t%1, %0")
 
