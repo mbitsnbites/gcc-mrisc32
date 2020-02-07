@@ -227,10 +227,8 @@ mrisc32_print_operand_address (FILE *file, machine_mode, rtx x)
 
   else
     {
-      /* TODO(m): This is a hack!  */
-      fprintf (file, "pc, #");
+      /* This should be a plain symbol reference.  */
       output_addr_const (file, x);
-      fprintf (file, "@pc");
     }
 }
 
