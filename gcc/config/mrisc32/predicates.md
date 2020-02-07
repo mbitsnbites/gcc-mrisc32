@@ -24,6 +24,12 @@
 
 ;; Constant operands.
 
+(define_predicate "mrisc32_const_zero_operand"
+  (ior (and (match_code "const_int")
+	    (match_test "INTVAL (op) == 0"))
+       (and (match_code "const_double")
+	    (match_test "real_equal (CONST_DOUBLE_REAL_VALUE (op), &dconst0)"))))
+
 (define_predicate "mrisc32_const_int_zero_operand"
   (and (match_code "const_int")
        (match_test "INTVAL (op) == 0")))
