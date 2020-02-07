@@ -98,14 +98,25 @@
 
 
 ;; -------------------------------------------------------------------------
-;; MRISC32 specific constraints, predicates and attributes
+;; MRISC32 specific constraints and predicates
 ;; -------------------------------------------------------------------------
 
 (include "constraints.md")
 (include "predicates.md")
 
-; All instructions are four bytes long.
+
+;; -------------------------------------------------------------------------
+;; Mode iterators and attributes
+;; -------------------------------------------------------------------------
+
+;; Most instructions are four bytes long.
 (define_attr "length" "" (const_int 4))
+
+;; All natively supported integer modes
+(define_mode_iterator ALLI [SI HI QI])
+
+;; Mnemonic suffix for different modes
+(define_mode_attr suffix [(SI "") (HI ".h") (QI ".b") (SF "")])
 
 
 ;; -------------------------------------------------------------------------
@@ -545,7 +556,8 @@
   [(set (match_operand:SI 0 "register_operand" "=r")
 	(ctz:SI (match_operand:SI 1 "register_operand" "r")))]
   ""
-  "rev\\t%0, %1\;clz\\t%0, %0")
+  "rev\\t%0, %1\;clz\\t%0, %0"
+  [(set_attr "length" "8")])
 
 (define_insn "sminsi3"
   [(set (match_operand:SI 0 "register_operand" "=r,r")
@@ -588,7 +600,8 @@
 	(abs:SI (match_operand:SI 1 "register_operand" "r")))
    (clobber (match_scratch:SI 2 "=r"))]
   ""
-  "sub\\t%2, z, %1\;max\\t%0, %1, %2")
+  "sub\\t%2, z, %1\;max\\t%0, %1, %2"
+  [(set_attr "length" "8")])
 
 (define_insn "bswaphi2"
   [(set (match_operand:HI 0 "register_operand" "=r")
@@ -914,8 +927,8 @@
 	       (match_operand:SI 2 "mrisc32_reg_or_imm15_operand" "r,I")))]
   ""
   "@
-   seq\t%0, %1, %2
-   seq\t%0, %1, #%2")
+   seq\\t%0, %1, %2
+   seq\\t%0, %1, #%2")
 
 (define_insn "*sne"
   [(set (match_operand:SI 0 "register_operand"                   "=r,r")
@@ -923,8 +936,8 @@
 	       (match_operand:SI 2 "mrisc32_reg_or_imm15_operand" "r,I")))]
   ""
   "@
-   sne\t%0, %1, %2
-   sne\t%0, %1, #%2")
+   sne\\t%0, %1, %2
+   sne\\t%0, %1, #%2")
 
 (define_insn "*slt"
   [(set (match_operand:SI 0 "register_operand"                   "=r,r")
@@ -932,8 +945,8 @@
 	       (match_operand:SI 2 "mrisc32_reg_or_imm15_operand" "r,I")))]
   ""
   "@
-   slt\t%0, %1, %2
-   slt\t%0, %1, #%2")
+   slt\\t%0, %1, %2
+   slt\\t%0, %1, #%2")
 
 (define_insn "*sltu"
   [(set (match_operand:SI 0 "register_operand"                    "=r,r")
@@ -941,8 +954,8 @@
 		(match_operand:SI 2 "mrisc32_reg_or_imm15_operand" "r,I")))]
   ""
   "@
-   sltu\t%0, %1, %2
-   sltu\t%0, %1, #%2")
+   sltu\\t%0, %1, %2
+   sltu\\t%0, %1, #%2")
 
 (define_insn "*sle"
   [(set (match_operand:SI 0 "register_operand"                   "=r,r")
@@ -950,8 +963,8 @@
 	       (match_operand:SI 2 "mrisc32_reg_or_imm15_operand" "r,I")))]
   ""
   "@
-   sle\t%0, %1, %2
-   sle\t%0, %1, #%2")
+   sle\\t%0, %1, %2
+   sle\\t%0, %1, #%2")
 
 (define_insn "*sleu"
   [(set (match_operand:SI 0 "register_operand"                    "=r,r")
@@ -959,8 +972,8 @@
 		(match_operand:SI 2 "mrisc32_reg_or_imm15_operand" "r,I")))]
   ""
   "@
-   sleu\t%0, %1, %2
-   sleu\t%0, %1, #%2")
+   sleu\\t%0, %1, %2
+   sleu\\t%0, %1, #%2")
 
 ;; The greater than (or equal) conditions are implemented by reversing
 ;; the operand order. Thus we do not support an immediate value as the
@@ -972,8 +985,8 @@
 	       (match_operand:SI 2 "mrisc32_reg_or_int_zero_operand" "r,O")))]
   ""
   "@
-   slt\t%0, %2, %1
-   slt\t%0, z, %1")
+   slt\\t%0, %2, %1
+   slt\\t%0, z, %1")
 
 (define_insn "*sgtu"
   [(set (match_operand:SI 0 "register_operand"                       "=r,r")
@@ -981,8 +994,8 @@
 		(match_operand:SI 2 "mrisc32_reg_or_int_zero_operand" "r,O")))]
   ""
   "@
-   sltu\t%0, %2, %1
-   sltu\t%0, z, %1")
+   sltu\\t%0, %2, %1
+   sltu\\t%0, z, %1")
 
 (define_insn "*sge"
   [(set (match_operand:SI 0 "register_operand"                      "=r,r")
@@ -990,8 +1003,8 @@
 	       (match_operand:SI 2 "mrisc32_reg_or_int_zero_operand" "r,O")))]
   ""
   "@
-   sle\t%0, %2, %1
-   sle\t%0, z, %1")
+   sle\\t%0, %2, %1
+   sle\\t%0, z, %1")
 
 (define_insn "*sgeu"
   [(set (match_operand:SI 0 "register_operand"                       "=r,r")
@@ -999,8 +1012,8 @@
 		(match_operand:SI 2 "mrisc32_reg_or_int_zero_operand" "r,O")))]
   ""
   "@
-   sleu\t%0, %2, %1
-   sleu\t%0, z, %1")
+   sleu\\t%0, %2, %1
+   sleu\\t%0, z, %1")
 
 
 ;; SFmode
@@ -1011,8 +1024,8 @@
 	       (match_operand:SF 2 "mrisc32_reg_or_dbl_zero_operand" "r,Z")))]
   "TARGET_HARD_FLOAT"
   "@
-   fseq\t%0, %1, %2
-   fseq\t%0, %1, z")
+   fseq\\t%0, %1, %2
+   fseq\\t%0, %1, z")
 
 (define_insn "*fsne"
   [(set (match_operand:SI 0 "register_operand"                      "=r,r")
@@ -1020,8 +1033,8 @@
 	       (match_operand:SF 2 "mrisc32_reg_or_dbl_zero_operand" "r,Z")))]
   "TARGET_HARD_FLOAT"
   "@
-   fsne\t%0, %1, %2
-   fsne\t%0, %1, z")
+   fsne\\t%0, %1, %2
+   fsne\\t%0, %1, z")
 
 (define_insn "*fslt"
   [(set (match_operand:SI 0 "register_operand"                      "=r,r")
@@ -1029,8 +1042,8 @@
 	       (match_operand:SF 2 "mrisc32_reg_or_dbl_zero_operand" "r,Z")))]
   "TARGET_HARD_FLOAT"
   "@
-   fslt\t%0, %1, %2
-   fslt\t%0, %1, z")
+   fslt\\t%0, %1, %2
+   fslt\\t%0, %1, z")
 
 (define_insn "*fsle"
   [(set (match_operand:SI 0 "register_operand"                      "=r,r")
@@ -1038,8 +1051,8 @@
 	       (match_operand:SF 2 "mrisc32_reg_or_dbl_zero_operand" "r,Z")))]
   "TARGET_HARD_FLOAT"
   "@
-   fsle\t%0, %1, %2
-   fsle\t%0, %1, z")
+   fsle\\t%0, %1, %2
+   fsle\\t%0, %1, z")
 
 (define_insn "*fsgt"
   [(set (match_operand:SI 0 "register_operand"                      "=r,r")
@@ -1047,8 +1060,8 @@
 	       (match_operand:SF 2 "mrisc32_reg_or_dbl_zero_operand" "r,Z")))]
   "TARGET_HARD_FLOAT"
   "@
-   fslt\t%0, %2, %1
-   fslt\t%0, z, %1")
+   fslt\\t%0, %2, %1
+   fslt\\t%0, z, %1")
 
 (define_insn "*fsge"
   [(set (match_operand:SI 0 "register_operand"                      "=r,r")
@@ -1056,8 +1069,8 @@
 	       (match_operand:SF 2 "mrisc32_reg_or_dbl_zero_operand" "r,Z")))]
   "TARGET_HARD_FLOAT"
   "@
-   fsle\t%0, %2, %1
-   fsle\t%0, z, %1")
+   fsle\\t%0, %2, %1
+   fsle\\t%0, z, %1")
 
 ;; TODO(m): Add proper support for unordered comparisons!
 ;; See riscv.c: riscv_emit_float_compare.
@@ -1068,8 +1081,8 @@
 		 (match_operand:SF 2 "mrisc32_reg_or_dbl_zero_operand" "r,Z")))]
   "TARGET_HARD_FLOAT"
   "@
-   fseq\t%0, %1, %2
-   fseq\t%0, %1, z")
+   fseq\\t%0, %1, %2
+   fseq\\t%0, %1, z")
 
 (define_insn "*fsltgt"
   [(set (match_operand:SI 0 "register_operand"                        "=r,r")
@@ -1077,8 +1090,8 @@
 		 (match_operand:SF 2 "mrisc32_reg_or_dbl_zero_operand" "r,Z")))]
   "TARGET_HARD_FLOAT"
   "@
-   fsne\t%0, %1, %2
-   fsne\t%0, %1, z")
+   fsne\\t%0, %1, %2
+   fsne\\t%0, %1, z")
 
 (define_insn "*fsunlt"
   [(set (match_operand:SI 0 "register_operand"                        "=r,r")
@@ -1086,8 +1099,8 @@
 		 (match_operand:SF 2 "mrisc32_reg_or_dbl_zero_operand" "r,Z")))]
   "TARGET_HARD_FLOAT"
   "@
-   fslt\t%0, %1, %2
-   fslt\t%0, %1, z")
+   fslt\\t%0, %1, %2
+   fslt\\t%0, %1, z")
 
 (define_insn "*fsunle"
   [(set (match_operand:SI 0 "register_operand"                        "=r,r")
@@ -1095,8 +1108,8 @@
 		 (match_operand:SF 2 "mrisc32_reg_or_dbl_zero_operand" "r,Z")))]
   "TARGET_HARD_FLOAT"
   "@
-   fsle\t%0, %1, %2
-   fsle\t%0, %1, z")
+   fsle\\t%0, %1, %2
+   fsle\\t%0, %1, z")
 
 (define_insn "*fsungt"
   [(set (match_operand:SI 0 "register_operand"                        "=r,r")
@@ -1104,8 +1117,8 @@
 		 (match_operand:SF 2 "mrisc32_reg_or_dbl_zero_operand" "r,Z")))]
   "TARGET_HARD_FLOAT"
   "@
-   fslt\t%0, %2, %1
-   fslt\t%0, z, %1")
+   fslt\\t%0, %2, %1
+   fslt\\t%0, z, %1")
 
 (define_insn "*fsunge"
   [(set (match_operand:SI 0 "register_operand"                        "=r,r")
@@ -1113,8 +1126,8 @@
 		 (match_operand:SF 2 "mrisc32_reg_or_dbl_zero_operand" "r,Z")))]
   "TARGET_HARD_FLOAT"
   "@
-   fsle\t%0, %2, %1
-   fsle\t%0, z, %1")
+   fsle\\t%0, %2, %1
+   fsle\\t%0, z, %1")
 
 
 ;; Ordered/unordered checks.
@@ -1126,14 +1139,15 @@
 	(ordered:SI (match_operand:SF 1 "register_operand" "r")
 		    (match_operand:SF 2 "register_operand" "r")))]
   "TARGET_HARD_FLOAT"
-  "fsnan\t%0, %1, %2\;nor\t%0, %0, %0")
+  "fsnan\\t%0, %1, %2\;nor\\t%0, %0, %0"
+  [(set_attr "length" "8")])
 
 (define_insn "*fsunord"
   [(set (match_operand:SI 0 "register_operand"              "=r")
 	(unordered:SI (match_operand:SF 1 "register_operand" "r")
 		      (match_operand:SF 2 "register_operand" "r")))]
   "TARGET_HARD_FLOAT"
-  "fsnan\t%0, %1, %2")
+  "fsnan\\t%0, %1, %2")
 
 
 ;; -------------------------------------------------------------------------
@@ -1185,7 +1199,8 @@
   "!SIBLING_CALL_P (insn)"
   "@
    jl\\t%0
-   addpchi\\tlr, #%0@pchi\;jl\\tlr, #%0+4@pclo")
+   addpchi\\tlr, #%0@pchi\;jl\\tlr, #%0+4@pclo"
+   [(set_attr "length" "4,8")])
 
 (define_insn "*sibcall"
   [(call (mem:QI (match_operand:SI 0 "mrisc32_call_insn_operand" "c,s"))
@@ -1203,7 +1218,8 @@
   "!SIBLING_CALL_P (insn)"
   "@
    jl\\t%1
-   addpchi\\tlr, #%1@pchi\;jl\\tlr, #%1+4@pclo")
+   addpchi\\tlr, #%1@pchi\;jl\\tlr, #%1+4@pclo"
+   [(set_attr "length" "4,8")])
 
 (define_insn "*sibcall_value"
   [(set (match_operand 0)
