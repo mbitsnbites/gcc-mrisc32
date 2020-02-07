@@ -687,16 +687,20 @@
 
 ;; -------------------------------------------------------------------------
 ;; Move instructions
+;; TODO(m): Lots of boilerplate here. Consolidate with iterators.
 ;; -------------------------------------------------------------------------
 
 ;; SImode
 
 (define_expand "movsi"
-  [(set (match_operand:SI 0 "general_operand" "")
-	(match_operand:SI 1 "general_operand" ""))]
+  [(parallel
+    [(set (match_operand:SI 0 "general_operand" "")
+	  (match_operand:SI 1 "general_operand" ""))
+     (clobber (match_scratch:SI 2))])]
   ""
 {
   /* If this is a store, force the value into a register.  */
+  /* TODO(m): Use the z register instead of loading #0 into a register.  */
   if (! (reload_in_progress || reload_completed))
   {
     if (MEM_P (operands[0]))
@@ -713,38 +717,57 @@
   }
 })
 
-(define_insn "*movsi"
-  [(set (match_operand:SI 0 "nonimmediate_operand"      "=r,r,r,   ABCW")
-	(match_operand:SI 1 "mrisc32_int_movsrc_operand" "r,i,ABCW,r"))]
+(define_insn "*movsi_load"
+  [(set (match_operand:SI 0 "register_operand"          "=r,r,r,r")
+	(match_operand:SI 1 "mrisc32_int_movsrc_operand" "r,i,A,BCW"))
+   (clobber (match_scratch:SI 2 "=X,X,X,X"))]
   ""
   "@
    mov\\t%0, %1
    *return mrisc32_emit_load_immediate (operands[0], operands[1]);
-   ldw\\t%0, %1
-   stw\\t%1, %0")
+   addpchi\\t%0, #%1@pchi\;ldw\\t%0, %0, #%1+4@pclo
+   ldw\\t%0, %1"
+  ;; TODO(m): Dynamically calculate the length for LDI.
+  [(set_attr "length" "4,8,8,4")])
+
+(define_insn "*movsi_store"
+  [(set (match_operand:SI 0 "memory_operand"  "=A,BCW")
+	(match_operand:SI 1 "register_operand" "r,r"))
+   (clobber (match_scratch:SI 2 "=&r,X"))]
+  ""
+  "@
+   addpchi\\t%2, #%0@pchi\;stw\\t%1, %2, #%0+4@pclo
+   stw\\t%1, %0"
+  [(set_attr "length" "8,4")])
 
 
 ;; HImode
 
 (define_insn "zero_extendhisi2"
-  [(set (match_operand:SI 0 "register_operand"                    "=r,r")
-	(zero_extend:SI (match_operand:HI 1 "nonimmediate_operand" "r,ABCW")))]
+  [(set (match_operand:SI 0 "register_operand"                    "=r,r,r")
+	(zero_extend:SI (match_operand:HI 1 "nonimmediate_operand" "r,A,BCW")))]
   ""
   "@
    shuf\\t%0, %1, #0x0b48
-   lduh\\t%0, %1")
+   addpchi\\t%0, #%1@pchi\;lduh\\t%0, %0, #%1+4@pclo
+   lduh\\t%0, %1"
+  [(set_attr "length" "4,8,4")])
 
 (define_insn "extendhisi2"
-  [(set (match_operand:SI 0 "register_operand"                    "=r,r")
-	(sign_extend:SI (match_operand:HI 1 "nonimmediate_operand" "r,ABCW")))]
+  [(set (match_operand:SI 0 "register_operand"                    "=r,r,r")
+	(sign_extend:SI (match_operand:HI 1 "nonimmediate_operand" "r,A,BCW")))]
   ""
   "@
    shuf\\t%0, %1, #0x1b48
-   ldh\\t%0, %1")
+   addpchi\\t%0, #%1@pchi\;ldh\\t%0, %0, #%1+4@pclo
+   ldh\\t%0, %1"
+  [(set_attr "length" "4,8,4")])
 
 (define_expand "movhi"
-  [(set (match_operand:HI 0 "general_operand" "")
-	(match_operand:HI 1 "general_operand" ""))]
+  [(parallel
+    [(set (match_operand:HI 0 "general_operand" "")
+	  (match_operand:HI 1 "general_operand" ""))
+     (clobber (match_scratch:SI 2))])]
   ""
 {
   /* If this is a store, force the value into a register.  */
@@ -752,38 +775,56 @@
     operands[1] = force_reg (HImode, operands[1]);
 })
 
-(define_insn "*movhi"
-  [(set (match_operand:HI 0 "nonimmediate_operand"      "=r,r,r,   ABCW")
-	(match_operand:HI 1 "mrisc32_int_movsrc_operand" "r,J,ABCW,r"))]
+(define_insn "*movhi_load"
+  [(set (match_operand:HI 0 "register_operand"          "=r,r,r,r")
+	(match_operand:HI 1 "mrisc32_int_movsrc_operand" "r,J,A,BCW"))
+   (clobber (match_scratch:SI 2 "=X,X,X,X"))]
   ""
   "@
    mov\\t%0, %1
    ldi\\t%0, #%1
-   ldh\\t%0, %1
-   sth\\t%1, %0")
+   addpchi\\t%0, #%1@pchi\;lduh\\t%0, %0, #%1+4@pclo
+   lduh\\t%0, %1"
+  [(set_attr "length" "4,4,8,4")])
+
+(define_insn "*movhi_store"
+  [(set (match_operand:HI 0 "memory_operand"  "=A,BCW")
+	(match_operand:HI 1 "register_operand" "r,r"))
+   (clobber (match_scratch:SI 2 "=&r,X"))]
+  ""
+  "@
+   addpchi\\t%2, #%0@pchi\;sth\\t%1, %2, #%0+4@pclo
+   sth\\t%1, %0"
+  [(set_attr "length" "8,4")])
 
 
 ;; QImode
 
 (define_insn "zero_extendqisi2"
-  [(set (match_operand:SI 0 "register_operand"                    "=r,r")
-	(zero_extend:SI (match_operand:QI 1 "nonimmediate_operand" "r,ABCW")))]
+  [(set (match_operand:SI 0 "register_operand"                    "=r,r,r")
+	(zero_extend:SI (match_operand:QI 1 "nonimmediate_operand" "r,A,BCW")))]
   ""
   "@
    shuf\\t%0, %1, #0x0920
-   ldub\\t%0, %1")
+   addpchi\\t%0, #%1@pchi\;ldub\\t%0, %0, #%1+4@pclo
+   ldub\\t%0, %1"
+  [(set_attr "length" "4,8,4")])
 
 (define_insn "extendqisi2"
-  [(set (match_operand:SI 0 "register_operand"                    "=r,r")
-	(sign_extend:SI (match_operand:QI 1 "nonimmediate_operand" "r,ABCW")))]
+  [(set (match_operand:SI 0 "register_operand"                    "=r,r,r")
+	(sign_extend:SI (match_operand:QI 1 "nonimmediate_operand" "r,A,BCW")))]
   ""
   "@
    shuf\\t%0, %1, #0x1920
-   ldb\\t%0, %1")
+   addpchi\\t%0, #%1@pchi\;ldb\\t%0, %0, #%1+4@pclo
+   ldb\\t%0, %1"
+  [(set_attr "length" "4,8,4")])
 
 (define_expand "movqi"
-  [(set (match_operand:QI 0 "general_operand" "")
-	(match_operand:QI 1 "general_operand" ""))]
+  [(parallel
+    [(set (match_operand:QI 0 "general_operand" "")
+	  (match_operand:QI 1 "general_operand" ""))
+     (clobber (match_scratch:SI 2))])]
   ""
 {
   /* If this is a store, force the value into a register.  */
@@ -791,22 +832,36 @@
     operands[1] = force_reg (QImode, operands[1]);
 })
 
-(define_insn "*movqi"
-  [(set (match_operand:QI 0 "nonimmediate_operand"      "=r,r,r,   ABCW")
-	(match_operand:QI 1 "mrisc32_int_movsrc_operand" "r,J,ABCW,r"))]
+(define_insn "*movqi_load"
+  [(set (match_operand:QI 0 "register_operand"          "=r,r,r,r")
+	(match_operand:QI 1 "mrisc32_int_movsrc_operand" "r,J,A,BCW"))
+   (clobber (match_scratch:SI 2 "=X,X,X,X"))]
   ""
   "@
    mov\\t%0, %1
    ldi\\t%0, #%1
-   ldb\\t%0, %1
-   stb\\t%1, %0")
+   addpchi\\t%0, #%1@pchi\;ldub\\t%0, %0, #%1+4@pclo
+   ldub\\t%0, %1"
+  [(set_attr "length" "4,4,8,4")])
+
+(define_insn "*movqi_store"
+  [(set (match_operand:QI 0 "memory_operand"  "=A,BCW")
+	(match_operand:QI 1 "register_operand" "r,r"))
+   (clobber (match_scratch:SI 2 "=&r,X"))]
+  ""
+  "@
+   addpchi\\t%2, #%0@pchi\;stb\\t%1, %2, #%0+4@pclo
+   stb\\t%1, %0"
+  [(set_attr "length" "8,4")])
 
 
 ;; SFmode
 
 (define_expand "movsf"
-  [(set (match_operand:SF 0 "general_operand" "")
-	(match_operand:SF 1 "general_operand" ""))]
+  [(parallel
+    [(set (match_operand:SF 0 "general_operand" "")
+	  (match_operand:SF 1 "general_operand" ""))
+     (clobber (match_scratch:SI 2))])]
   ""
 {
   /* If this is a store, force the value into a register.  */
@@ -825,16 +880,28 @@
   }
 })
 
-(define_insn "*movsf"
-  [(set (match_operand:SF 0 "nonimmediate_operand"        "=r,r,r,   ABCW")
-	(match_operand:SF 1 "mrisc32_float_movsrc_operand" "r,F,ABCW,r"))]
-  "register_operand (operands[0], SFmode)
-   || register_operand (operands[1], SFmode)"
+(define_insn "*movsf_load"
+  [(set (match_operand:SF 0 "register_operand"            "=r,r,r,r")
+	(match_operand:SF 1 "mrisc32_float_movsrc_operand" "r,F,A,BCW"))
+   (clobber (match_scratch:SI 2 "=X,X,X,X"))]
+  ""
   "@
    mov\\t%0, %1
    *return mrisc32_emit_load_immediate (operands[0], operands[1]);
-   ldw\\t%0, %1
-   stw\\t%1, %0")
+   addpchi\\t%0, #%1@pchi\;ldw\\t%0, %0, #%1+4@pclo
+   ldw\\t%0, %1"
+  ;; TODO(m): Dynamically calculate the length for LDI.
+  [(set_attr "length" "4,8,8,4")])
+
+(define_insn "*movsf_store"
+  [(set (match_operand:SF 0 "memory_operand"  "=A,BCW")
+	(match_operand:SF 1 "register_operand" "r,r"))
+   (clobber (match_scratch:SI 2 "=&r,X"))]
+  ""
+  "@
+   addpchi\\t%2, #%0@pchi\;stw\\t%1, %2, #%0+4@pclo
+   stw\\t%1, %0"
+  [(set_attr "length" "8,4")])
 
 
 ;; -------------------------------------------------------------------------
