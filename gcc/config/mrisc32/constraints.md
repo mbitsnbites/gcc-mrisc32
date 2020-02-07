@@ -19,13 +19,21 @@
 ;; <http://www.gnu.org/licenses/>.
 
 ;; -------------------------------------------------------------------------
-;; Integer constant constraints.
+;; Constant constraints.
 ;; -------------------------------------------------------------------------
 
 (define_constraint "O"
-  "Integer zero."
+  "Integer zero operand"
   (and (match_code "const_int")
        (match_test "ival == 0")))
+
+(define_constraint "Z"
+  "Any zero operand (integer or floating-point)"
+  (ior
+    (and (match_code "const_int")
+	 (match_test "ival == 0"))
+    (and (match_code "const_double")
+	 (match_test "real_equal (rval, &dconst0)"))))
 
 (define_constraint "M"
   "Integer -1."
@@ -41,16 +49,6 @@
   "A 21-bit signed constant value (-1048576..1048575)"
   (and (match_code "const_int")
        (match_test "ival >= -1048576 && ival <= 1048575")))
-
-
-;; -------------------------------------------------------------------------
-;; Floating-point constant constraints.
-;; -------------------------------------------------------------------------
-
-(define_constraint "Z"
-  "Floating-point zero."
-  (and (match_code "const_double")
-       (match_test "real_equal (rval, &dconst0)")))
 
 
 ;; -------------------------------------------------------------------------

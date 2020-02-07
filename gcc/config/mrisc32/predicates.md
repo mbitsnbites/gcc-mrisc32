@@ -41,15 +41,18 @@
 
 ;; A valid register operand, including the zero register.
 
+(define_predicate "mrisc32_reg_or_zero_operand"
+  (ior (match_code "reg")
+       (and (match_code "const_int")
+	    (match_test "INTVAL (op) == 0"))
+       (and (match_code "const_double")
+	    (match_test "real_equal (CONST_DOUBLE_REAL_VALUE (op), &dconst0)"))))
+
 (define_predicate "mrisc32_reg_or_int_zero_operand"
   (ior (match_code "reg")
        (and (match_code "const_int")
 	    (match_test "INTVAL (op) == 0"))))
 
-(define_predicate "mrisc32_reg_or_dbl_zero_operand"
-  (ior (match_code "reg")
-       (and (match_code "const_double")
-	    (match_test "real_equal (CONST_DOUBLE_REAL_VALUE (op), &dconst0)"))))
 
 ;; A valid source operand for an integer move operation.
 

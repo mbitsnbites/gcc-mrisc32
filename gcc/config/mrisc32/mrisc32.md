@@ -214,9 +214,9 @@
   "add.h\\t%0, %1, %2")
 
 (define_insn "subhi3"
-  [(set (match_operand:HI 0 "register_operand"                         "=r,r")
-	(minus:HI (match_operand:HI 1 "mrisc32_reg_or_int_zero_operand" "r,O")
-		  (match_operand:HI 2 "register_operand"                "r,r")))]
+  [(set (match_operand:HI 0 "register_operand"                     "=r,r")
+	(minus:HI (match_operand:HI 1 "mrisc32_reg_or_zero_operand" "r,Z")
+		  (match_operand:HI 2 "register_operand"            "r,r")))]
   "TARGET_PACKED_OPS"
   "@
    sub.h\\t%0, %1, %2
@@ -268,9 +268,9 @@
   "add.b\\t%0, %1, %2")
 
 (define_insn "subqi3"
-  [(set (match_operand:QI 0 "register_operand"                         "=r,r")
-	(minus:QI (match_operand:QI 1 "mrisc32_reg_or_int_zero_operand" "r,O")
-		  (match_operand:QI 2 "register_operand"                "r,r")))]
+  [(set (match_operand:QI 0 "register_operand"                     "=r,r")
+	(minus:QI (match_operand:QI 1 "mrisc32_reg_or_zero_operand" "r,Z")
+		  (match_operand:QI 2 "register_operand"            "r,r")))]
   "TARGET_PACKED_OPS"
   "@
    sub.b\\t%0, %1, %2
@@ -619,18 +619,18 @@
 ;; SFmode
 
 (define_insn "sminsf3"
-  [(set (match_operand:SF 0 "register_operand"                        "=r,r")
-	(smin:SF (match_operand:SF 1 "register_operand"                "r,r")
-		 (match_operand:SF 2 "mrisc32_reg_or_dbl_zero_operand" "r,Z")))]
+  [(set (match_operand:SF 0 "register_operand"                    "=r,r")
+	(smin:SF (match_operand:SF 1 "register_operand"            "r,r")
+		 (match_operand:SF 2 "mrisc32_reg_or_zero_operand" "r,Z")))]
   "TARGET_HARD_FLOAT"
   "@
    fmin\\t%0, %1, %2
    fmin\\t%0, %1, z")
 
 (define_insn "smaxsf3"
-  [(set (match_operand:SF 0 "register_operand"                        "=r,r")
-	(smax:SF (match_operand:SF 1 "register_operand"                "r,r")
-		 (match_operand:SF 2 "mrisc32_reg_or_dbl_zero_operand" "r,Z")))]
+  [(set (match_operand:SF 0 "register_operand"                    "=r,r")
+	(smax:SF (match_operand:SF 1 "register_operand"            "r,r")
+		 (match_operand:SF 2 "mrisc32_reg_or_zero_operand" "r,Z")))]
   "TARGET_HARD_FLOAT"
   "@
    fmax\\t%0, %1, %2
@@ -1047,36 +1047,36 @@
 ;; second operand, but we do support constant zero via the z register.
 
 (define_insn "*sgt"
-  [(set (match_operand:SI 0 "register_operand"                      "=r,r")
-	(gt:SI (match_operand:SI 1 "register_operand"                "r,r")
-	       (match_operand:SI 2 "mrisc32_reg_or_int_zero_operand" "r,O")))]
+  [(set (match_operand:SI 0 "register_operand"                  "=r,r")
+	(gt:SI (match_operand:SI 1 "register_operand"            "r,r")
+	       (match_operand:SI 2 "mrisc32_reg_or_zero_operand" "r,Z")))]
   ""
   "@
    slt\\t%0, %2, %1
    slt\\t%0, z, %1")
 
 (define_insn "*sgtu"
-  [(set (match_operand:SI 0 "register_operand"                       "=r,r")
-	(gtu:SI (match_operand:SI 1 "register_operand"                "r,r")
-		(match_operand:SI 2 "mrisc32_reg_or_int_zero_operand" "r,O")))]
+  [(set (match_operand:SI 0 "register_operand"                   "=r,r")
+	(gtu:SI (match_operand:SI 1 "register_operand"            "r,r")
+		(match_operand:SI 2 "mrisc32_reg_or_zero_operand" "r,Z")))]
   ""
   "@
    sltu\\t%0, %2, %1
    sltu\\t%0, z, %1")
 
 (define_insn "*sge"
-  [(set (match_operand:SI 0 "register_operand"                      "=r,r")
-	(ge:SI (match_operand:SI 1 "register_operand"                "r,r")
-	       (match_operand:SI 2 "mrisc32_reg_or_int_zero_operand" "r,O")))]
+  [(set (match_operand:SI 0 "register_operand"                  "=r,r")
+	(ge:SI (match_operand:SI 1 "register_operand"            "r,r")
+	       (match_operand:SI 2 "mrisc32_reg_or_zero_operand" "r,Z")))]
   ""
   "@
    sle\\t%0, %2, %1
    sle\\t%0, z, %1")
 
 (define_insn "*sgeu"
-  [(set (match_operand:SI 0 "register_operand"                       "=r,r")
-	(geu:SI (match_operand:SI 1 "register_operand"                "r,r")
-		(match_operand:SI 2 "mrisc32_reg_or_int_zero_operand" "r,O")))]
+  [(set (match_operand:SI 0 "register_operand"                   "=r,r")
+	(geu:SI (match_operand:SI 1 "register_operand"            "r,r")
+		(match_operand:SI 2 "mrisc32_reg_or_zero_operand" "r,Z")))]
   ""
   "@
    sleu\\t%0, %2, %1
@@ -1086,54 +1086,54 @@
 ;; SFmode
 
 (define_insn "*fseq"
-  [(set (match_operand:SI 0 "register_operand"                      "=r,r")
-	(eq:SI (match_operand:SF 1 "register_operand"                "r,r")
-	       (match_operand:SF 2 "mrisc32_reg_or_dbl_zero_operand" "r,Z")))]
+  [(set (match_operand:SI 0 "register_operand"                  "=r,r")
+	(eq:SI (match_operand:SF 1 "register_operand"            "r,r")
+	       (match_operand:SF 2 "mrisc32_reg_or_zero_operand" "r,Z")))]
   "TARGET_HARD_FLOAT"
   "@
    fseq\\t%0, %1, %2
    fseq\\t%0, %1, z")
 
 (define_insn "*fsne"
-  [(set (match_operand:SI 0 "register_operand"                      "=r,r")
-	(ne:SI (match_operand:SF 1 "register_operand"                "r,r")
-	       (match_operand:SF 2 "mrisc32_reg_or_dbl_zero_operand" "r,Z")))]
+  [(set (match_operand:SI 0 "register_operand"                  "=r,r")
+	(ne:SI (match_operand:SF 1 "register_operand"            "r,r")
+	       (match_operand:SF 2 "mrisc32_reg_or_zero_operand" "r,Z")))]
   "TARGET_HARD_FLOAT"
   "@
    fsne\\t%0, %1, %2
    fsne\\t%0, %1, z")
 
 (define_insn "*fslt"
-  [(set (match_operand:SI 0 "register_operand"                      "=r,r")
-	(lt:SI (match_operand:SF 1 "register_operand"                "r,r")
-	       (match_operand:SF 2 "mrisc32_reg_or_dbl_zero_operand" "r,Z")))]
+  [(set (match_operand:SI 0 "register_operand"                  "=r,r")
+	(lt:SI (match_operand:SF 1 "register_operand"            "r,r")
+	       (match_operand:SF 2 "mrisc32_reg_or_zero_operand" "r,Z")))]
   "TARGET_HARD_FLOAT"
   "@
    fslt\\t%0, %1, %2
    fslt\\t%0, %1, z")
 
 (define_insn "*fsle"
-  [(set (match_operand:SI 0 "register_operand"                      "=r,r")
-	(le:SI (match_operand:SF 1 "register_operand"                "r,r")
-	       (match_operand:SF 2 "mrisc32_reg_or_dbl_zero_operand" "r,Z")))]
+  [(set (match_operand:SI 0 "register_operand"                  "=r,r")
+	(le:SI (match_operand:SF 1 "register_operand"            "r,r")
+	       (match_operand:SF 2 "mrisc32_reg_or_zero_operand" "r,Z")))]
   "TARGET_HARD_FLOAT"
   "@
    fsle\\t%0, %1, %2
    fsle\\t%0, %1, z")
 
 (define_insn "*fsgt"
-  [(set (match_operand:SI 0 "register_operand"                      "=r,r")
-	(gt:SI (match_operand:SF 1 "register_operand"                "r,r")
-	       (match_operand:SF 2 "mrisc32_reg_or_dbl_zero_operand" "r,Z")))]
+  [(set (match_operand:SI 0 "register_operand"                  "=r,r")
+	(gt:SI (match_operand:SF 1 "register_operand"            "r,r")
+	       (match_operand:SF 2 "mrisc32_reg_or_zero_operand" "r,Z")))]
   "TARGET_HARD_FLOAT"
   "@
    fslt\\t%0, %2, %1
    fslt\\t%0, z, %1")
 
 (define_insn "*fsge"
-  [(set (match_operand:SI 0 "register_operand"                      "=r,r")
-	(ge:SI (match_operand:SF 1 "register_operand"                "r,r")
-	       (match_operand:SF 2 "mrisc32_reg_or_dbl_zero_operand" "r,Z")))]
+  [(set (match_operand:SI 0 "register_operand"                  "=r,r")
+	(ge:SI (match_operand:SF 1 "register_operand"            "r,r")
+	       (match_operand:SF 2 "mrisc32_reg_or_zero_operand" "r,Z")))]
   "TARGET_HARD_FLOAT"
   "@
    fsle\\t%0, %2, %1
@@ -1143,54 +1143,54 @@
 ;; See riscv.c: riscv_emit_float_compare.
 
 (define_insn "*fsuneq"
-  [(set (match_operand:SI 0 "register_operand"                        "=r,r")
-	(uneq:SI (match_operand:SF 1 "register_operand"                "r,r")
-		 (match_operand:SF 2 "mrisc32_reg_or_dbl_zero_operand" "r,Z")))]
+  [(set (match_operand:SI 0 "register_operand"                    "=r,r")
+	(uneq:SI (match_operand:SF 1 "register_operand"            "r,r")
+		 (match_operand:SF 2 "mrisc32_reg_or_zero_operand" "r,Z")))]
   "TARGET_HARD_FLOAT"
   "@
    fseq\\t%0, %1, %2
    fseq\\t%0, %1, z")
 
 (define_insn "*fsltgt"
-  [(set (match_operand:SI 0 "register_operand"                        "=r,r")
-	(ltgt:SI (match_operand:SF 1 "register_operand"                "r,r")
-		 (match_operand:SF 2 "mrisc32_reg_or_dbl_zero_operand" "r,Z")))]
+  [(set (match_operand:SI 0 "register_operand"                    "=r,r")
+	(ltgt:SI (match_operand:SF 1 "register_operand"            "r,r")
+		 (match_operand:SF 2 "mrisc32_reg_or_zero_operand" "r,Z")))]
   "TARGET_HARD_FLOAT"
   "@
    fsne\\t%0, %1, %2
    fsne\\t%0, %1, z")
 
 (define_insn "*fsunlt"
-  [(set (match_operand:SI 0 "register_operand"                        "=r,r")
-	(unlt:SI (match_operand:SF 1 "register_operand"                "r,r")
-		 (match_operand:SF 2 "mrisc32_reg_or_dbl_zero_operand" "r,Z")))]
+  [(set (match_operand:SI 0 "register_operand"                    "=r,r")
+	(unlt:SI (match_operand:SF 1 "register_operand"            "r,r")
+		 (match_operand:SF 2 "mrisc32_reg_or_zero_operand" "r,Z")))]
   "TARGET_HARD_FLOAT"
   "@
    fslt\\t%0, %1, %2
    fslt\\t%0, %1, z")
 
 (define_insn "*fsunle"
-  [(set (match_operand:SI 0 "register_operand"                        "=r,r")
-	(unle:SI (match_operand:SF 1 "register_operand"                "r,r")
-		 (match_operand:SF 2 "mrisc32_reg_or_dbl_zero_operand" "r,Z")))]
+  [(set (match_operand:SI 0 "register_operand"                    "=r,r")
+	(unle:SI (match_operand:SF 1 "register_operand"            "r,r")
+		 (match_operand:SF 2 "mrisc32_reg_or_zero_operand" "r,Z")))]
   "TARGET_HARD_FLOAT"
   "@
    fsle\\t%0, %1, %2
    fsle\\t%0, %1, z")
 
 (define_insn "*fsungt"
-  [(set (match_operand:SI 0 "register_operand"                        "=r,r")
-	(ungt:SI (match_operand:SF 1 "register_operand"                "r,r")
-		 (match_operand:SF 2 "mrisc32_reg_or_dbl_zero_operand" "r,Z")))]
+  [(set (match_operand:SI 0 "register_operand"                    "=r,r")
+	(ungt:SI (match_operand:SF 1 "register_operand"            "r,r")
+		 (match_operand:SF 2 "mrisc32_reg_or_zero_operand" "r,Z")))]
   "TARGET_HARD_FLOAT"
   "@
    fslt\\t%0, %2, %1
    fslt\\t%0, z, %1")
 
 (define_insn "*fsunge"
-  [(set (match_operand:SI 0 "register_operand"                        "=r,r")
-	(unge:SI (match_operand:SF 1 "register_operand"                "r,r")
-		 (match_operand:SF 2 "mrisc32_reg_or_dbl_zero_operand" "r,Z")))]
+  [(set (match_operand:SI 0 "register_operand"                    "=r,r")
+	(unge:SI (match_operand:SF 1 "register_operand"            "r,r")
+		 (match_operand:SF 2 "mrisc32_reg_or_zero_operand" "r,Z")))]
   "TARGET_HARD_FLOAT"
   "@
    fsle\\t%0, %2, %1
