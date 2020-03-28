@@ -588,6 +588,94 @@
   [(set_attr "type" "shuf")])
 
 
+;; HImode - Same instructions as SImode (32-bit wide), but with HI signatures.
+
+(define_insn "andhi3"
+  [(set (match_operand:HI 0 "register_operand" "=r")
+	(and:HI (match_operand:HI 1 "register_operand" "r")
+		(match_operand:HI 2 "register_operand" "r")))]
+  ""
+  "and\\t%0, %1, %2"
+  [(set_attr "type" "logical")])
+
+(define_insn "iorhi3"
+  [(set (match_operand:HI 0 "register_operand" "=r")
+	(ior:HI (match_operand:HI 1 "register_operand" "r")
+		(match_operand:HI 2 "register_operand" "r")))]
+  ""
+  "or\\t%0, %1, %2"
+  [(set_attr "type" "logical")])
+
+(define_insn "xorhi3"
+  [(set (match_operand:HI 0 "register_operand" "=r")
+	(xor:HI (match_operand:HI 1 "register_operand" "r")
+		(match_operand:HI 2 "register_operand" "r")))]
+  ""
+  "xor\\t%0, %1, %2"
+  [(set_attr "type" "logical")])
+
+(define_insn "*norhi3"
+  [(set (match_operand:HI 0 "register_operand" "=r")
+	(and:HI (not:HI (match_operand:HI 1 "register_operand" "r"))
+		(not:HI (match_operand:HI 2 "register_operand" "r"))))]
+  ""
+  "nor\\t%0, %1, %2"
+  [(set_attr "type" "logical")])
+
+(define_insn "*bichi3"
+  [(set (match_operand:HI 0 "register_operand" "=r")
+	(and:HI (not:HI
+		  (match_operand:HI 1 "register_operand" "r"))
+		(match_operand:HI 2 "register_operand" "r")))]
+  ""
+  "bic\\t%0, %2, %1"
+  [(set_attr "type" "logical")])
+
+
+;; QImode - Same instructions as SImode (32-bit wide), but with QI signatures.
+
+(define_insn "andqi3"
+  [(set (match_operand:QI 0 "register_operand" "=r")
+	(and:QI (match_operand:QI 1 "register_operand" "r")
+		(match_operand:QI 2 "register_operand" "r")))]
+  ""
+  "and\\t%0, %1, %2"
+  [(set_attr "type" "logical")])
+
+(define_insn "iorqi3"
+  [(set (match_operand:QI 0 "register_operand" "=r")
+	(ior:QI (match_operand:QI 1 "register_operand" "r")
+		(match_operand:QI 2 "register_operand" "r")))]
+  ""
+  "or\\t%0, %1, %2"
+  [(set_attr "type" "logical")])
+
+(define_insn "xorqi3"
+  [(set (match_operand:QI 0 "register_operand" "=r")
+	(xor:QI (match_operand:QI 1 "register_operand" "r")
+		(match_operand:QI 2 "register_operand" "r")))]
+  ""
+  "xor\\t%0, %1, %2"
+  [(set_attr "type" "logical")])
+
+(define_insn "*norqi3"
+  [(set (match_operand:QI 0 "register_operand" "=r")
+	(and:QI (not:QI (match_operand:QI 1 "register_operand" "r"))
+		(not:QI (match_operand:QI 2 "register_operand" "r"))))]
+  ""
+  "nor\\t%0, %1, %2"
+  [(set_attr "type" "logical")])
+
+(define_insn "*bicqi3"
+  [(set (match_operand:QI 0 "register_operand" "=r")
+	(and:QI (not:QI
+		  (match_operand:QI 1 "register_operand" "r"))
+		(match_operand:QI 2 "register_operand" "r")))]
+  ""
+  "bic\\t%0, %2, %1"
+  [(set_attr "type" "logical")])
+
+
 ;; -------------------------------------------------------------------------
 ;; Shift instructions
 ;; TODO(m): Add support for DImode.
@@ -925,20 +1013,20 @@
 {
   /* If this is a store, force the value into a register.  */
   if (! (reload_in_progress || reload_completed))
-  {
-    if (MEM_P (operands[0]))
-      {
-	if (!mrisc32_reg_or_zero_operand (operands[1], <MODE>mode))
-	  operands[1] = force_reg (<MODE>mode, operands[1]);
-	if (MEM_P (XEXP (operands[0], 0)))
-	  operands[0] = gen_rtx_MEM (<MODE>mode, force_reg (<MODE>mode, XEXP (operands[0], 0)));
-      }
-    else
-      {
-	if (MEM_P (operands[1]) && MEM_P (XEXP (operands[1], 0)))
-	  operands[1] = gen_rtx_MEM (<MODE>mode, force_reg (<MODE>mode, XEXP (operands[1], 0)));
-      }
-  }
+    {
+      if (MEM_P (operands[0]))
+	{
+	  if (!mrisc32_reg_or_zero_operand (operands[1], <MODE>mode))
+	    operands[1] = force_reg (<MODE>mode, operands[1]);
+	  if (MEM_P (XEXP (operands[0], 0)))
+	    operands[0] = gen_rtx_MEM (<MODE>mode, force_reg (<MODE>mode, XEXP (operands[0], 0)));
+	}
+      else
+	{
+	  if (MEM_P (operands[1]) && MEM_P (XEXP (operands[1], 0)))
+	    operands[1] = gen_rtx_MEM (<MODE>mode, force_reg (<MODE>mode, XEXP (operands[1], 0)));
+	}
+    }
 })
 
 (define_insn "*mov<mode>"
