@@ -1,0 +1,53 @@
+; Options for the MRISC32 compiler port.
+;
+; Copyright (C) 2019-2020 Free Software Foundation, Inc.
+; Contributed by Marcus Geelnard <m@bitsnbites.eu>
+;
+; This file is part of GCC.
+;
+; GCC is free software; you can redistribute it and/or modify it under
+; the terms of the GNU General Public License as published by the Free
+; Software Foundation; either version 3, or (at your option) any later
+; version.
+;
+; GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+; WARRANTY; without even the implied warranty of MERCHANTABILITY or
+; FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+; for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with GCC; see the file COPYING3.  If not see
+; <http://www.gnu.org/licenses/>.
+
+; Options for controlling the compiler.
+
+mhard-float
+Target Mask(HARD_FLOAT)
+Enable hardware floating point instructions.
+
+mdiv
+Target Mask(DIV)
+Enable hardware div and rem instructions.
+
+mpacked-ops
+Target Mask(PACKED_OPS)
+Enable packed operation instructions.
+
+msaturating-ops
+Target Mask(SATURATING_OPS)
+Enable saturating operation instructions.
+
+mvector-ops
+Target Mask(VECTOR_OPS)
+Enable vector instructions.
+
+
+; Options for controlling the linker.
+
+msim
+Target RejectNegative
+Link to the simulator runtime.
+
+mno-crt0
+Target RejectNegative
+Do not link to the default CRT0 implementation.
