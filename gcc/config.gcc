@@ -383,6 +383,7 @@ moxie*)	cpu_type=moxie
 	;;
 mrisc32*)
 	cpu_type=mrisc32
+	extra_headers="mr32intrin.h"
 	;;
 fido-*-*)
 	cpu_type=m68k
