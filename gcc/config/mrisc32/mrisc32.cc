@@ -30,7 +30,7 @@
 #include "stringpool.h"
 #include "attribs.h"
 #include "df.h"
-#include "memmodel.h"
+#include "langhooks.h"
 #include "tm_p.h"
 #include "regs.h"
 #include "memmodel.h"
@@ -1766,7 +1766,314 @@ mrisc32_subreg_di_high (rtx op)
 }
 
 
-/* Initialize the GCC target structure.  */
+/*******************************************************************/
+/* MRISC32 specific builtins.                                      */
+/*******************************************************************/
+
+/* Return the type to use as __builtin_va_list.  */
+static tree
+mrisc32_build_builtin_va_list (void)
+{
+  return build_pointer_type (char_type_node);
+}
+
+/* Codes for all the MRISC32 builtins.  */
+enum mrisc32_builtins
+{
+  MRISC32_BUILTIN_ADDS,
+  MRISC32_BUILTIN_ADDSU,
+  MRISC32_BUILTIN_SUBS,
+  MRISC32_BUILTIN_SUBSU,
+  MRISC32_BUILTIN_REV,
+  MRISC32_BUILTIN_CRC32C_8,
+  MRISC32_BUILTIN_CRC32C_16,
+  MRISC32_BUILTIN_CRC32C_32,
+  MRISC32_BUILTIN_XCHGSR,
+  MRISC32_BUILTIN_GETSR,
+  MRISC32_BUILTIN_SETSR,
+  MRISC32_BUILTIN_SYNC,
+  MRISC32_BUILTIN_CCTRL,
+  MRISC32_BUILTIN__COUNT
+};
+
+
+static GTY(()) tree mrisc32_builtin_decls[MRISC32_BUILTIN__COUNT];
+
+/* Return the MRISC32 builtin for CODE.  */
+static tree
+mrisc32_builtin_decl (unsigned code, bool initialize_p ATTRIBUTE_UNUSED)
+{
+  if (code >= MRISC32_BUILTIN__COUNT)
+    return error_mark_node;
+
+  return mrisc32_builtin_decls[code];
+}
+
+#define def_builtin(NAME, TYPE, CODE)					\
+do {									\
+  tree bdecl;								\
+  bdecl = add_builtin_function ((NAME), (TYPE), (CODE), BUILT_IN_MD,	\
+				NULL, NULL_TREE);			\
+  mrisc32_builtin_decls[CODE] = bdecl;					\
+} while (0)
+
+/* Set up all builtin functions for this target.  */
+static void
+mrisc32_init_builtins (void)
+{
+  /* Function types.  */
+  tree int_ftype_int
+    = build_function_type_list (integer_type_node, integer_type_node,
+				NULL_TREE);
+  tree int_ftype_int_int
+    = build_function_type_list (integer_type_node, integer_type_node,
+				integer_type_node, NULL_TREE);
+  tree void_ftype_int_int
+    = build_function_type_list (void_type_node, integer_type_node,
+				integer_type_node, NULL_TREE);
+  tree void_ftype_void
+    = build_function_type_list (void_type_node, NULL_TREE);
+
+  /* Register builtins.  */
+  def_builtin ("__builtin_mrisc32_adds",
+	       int_ftype_int_int, MRISC32_BUILTIN_ADDS);
+  def_builtin ("__builtin_mrisc32_addsu",
+	       int_ftype_int_int, MRISC32_BUILTIN_ADDSU);
+  def_builtin ("__builtin_mrisc32_subs",
+	       int_ftype_int_int, MRISC32_BUILTIN_SUBS);
+  def_builtin ("__builtin_mrisc32_subsu",
+	       int_ftype_int_int, MRISC32_BUILTIN_SUBSU);
+  def_builtin ("__builtin_mrisc32_rev",
+	       int_ftype_int,     MRISC32_BUILTIN_REV);
+  def_builtin ("__builtin_mrisc32_crc32c_8",
+	       int_ftype_int_int, MRISC32_BUILTIN_CRC32C_8);
+  def_builtin ("__builtin_mrisc32_crc32c_16",
+	       int_ftype_int_int, MRISC32_BUILTIN_CRC32C_16);
+  def_builtin ("__builtin_mrisc32_crc32c_32",
+	       int_ftype_int_int, MRISC32_BUILTIN_CRC32C_32);
+  def_builtin ("__builtin_mrisc32_xchgsr",
+	       int_ftype_int_int, MRISC32_BUILTIN_XCHGSR);
+  def_builtin ("__builtin_mrisc32_getsr",
+	       int_ftype_int, MRISC32_BUILTIN_GETSR);
+  def_builtin ("__builtin_mrisc32_setsr",
+	       void_ftype_int_int, MRISC32_BUILTIN_SETSR);
+  def_builtin ("__builtin_mrisc32_sync",
+	       void_ftype_void, MRISC32_BUILTIN_SYNC);
+  def_builtin ("__builtin_mrisc32_cctrl",
+	       int_ftype_int_int, MRISC32_BUILTIN_CCTRL);
+}
+
+struct builtin_description
+{
+  const enum insn_code icode;
+  const char *const name;
+  const enum mrisc32_builtins code;
+};
+
+static const struct builtin_description bdesc_1res_2arg[] =
+{
+  { CODE_FOR_ssaddsi3, "__builtin_mrisc32_adds", MRISC32_BUILTIN_ADDS },
+  { CODE_FOR_usaddsi3, "__builtin_mrisc32_addsu", MRISC32_BUILTIN_ADDSU },
+  { CODE_FOR_sssubsi3, "__builtin_mrisc32_subs", MRISC32_BUILTIN_SUBS },
+  { CODE_FOR_ussubsi3, "__builtin_mrisc32_subsu", MRISC32_BUILTIN_SUBSU },
+  { CODE_FOR_mrisc32_crc32c_8_si3, "__builtin_mrisc32_crc32c_8", MRISC32_BUILTIN_CRC32C_8 },
+  { CODE_FOR_mrisc32_crc32c_16_si3, "__builtin_mrisc32_crc32c_16", MRISC32_BUILTIN_CRC32C_16 },
+  { CODE_FOR_mrisc32_crc32c_32_si3, "__builtin_mrisc32_crc32c_32", MRISC32_BUILTIN_CRC32C_32 },
+  { CODE_FOR_mrisc32_xchgsrsi3, "__builtin_mrisc32_xchgsr", MRISC32_BUILTIN_XCHGSR },
+  { CODE_FOR_mrisc32_cctrlsi3, "__builtin_mrisc32_cctrl", MRISC32_BUILTIN_CCTRL },
+};
+
+static const struct builtin_description bdesc_1res_1arg[] =
+{
+  { CODE_FOR_mrisc32_revsi2, "__builtin_mrisc32_rev", MRISC32_BUILTIN_REV },
+  { CODE_FOR_mrisc32_getsrsi2, "__builtin_mrisc32_getsr", MRISC32_BUILTIN_GETSR },
+};
+
+static const struct builtin_description bdesc_0res_2arg[] =
+{
+  { CODE_FOR_mrisc32_setsrsi2, "__builtin_mrisc32_setsr", MRISC32_BUILTIN_SETSR },
+};
+
+static const struct builtin_description bdesc_0res_0arg[] =
+{
+  { CODE_FOR_mrisc32_sync, "__builtin_mrisc32_sync", MRISC32_BUILTIN_SYNC },
+};
+
+
+/* Check whether our current target implements the given pattern and
+   error out if not.  */
+static void
+mrisc32_emit_insn_if_supported_by_target (rtx pat)
+{
+  rtx_insn * insn;
+
+  start_sequence ();
+  emit_insn (pat);
+  insn = get_insns ();
+  end_sequence ();
+
+  if (recog_memoized (insn) < 0)
+    error ("this builtin is not supported for this target");
+  else
+    emit_insn (insn);
+}
+
+/* Return a legitimate rtx for instruction ICODE's return value.  Use TARGET
+   if it's not null, has the right mode, and satisfies operand 0's
+   predicate.  */
+
+static rtx
+mrisc32_legitimize_target (enum insn_code icode, rtx target)
+{
+  machine_mode mode = insn_data[icode].operand[0].mode;
+
+  if (! target
+      || GET_MODE (target) != mode
+      || ! (*insn_data[icode].operand[0].predicate) (target, mode))
+    return gen_reg_rtx (mode);
+  else
+    return target;
+}
+
+/* Given that ARG is being passed as operand OPNUM to instruction ICODE,
+   check whether ARG satisfies the operand's constraints.  If it doesn't,
+   copy ARG to a temporary register and return that.  Otherwise return ARG
+   itself.  */
+
+static rtx
+mrisc32_legitimize_argument (enum insn_code icode, int opnum, rtx arg)
+{
+  machine_mode mode = insn_data[icode].operand[opnum].mode;
+
+  if ((*insn_data[icode].operand[opnum].predicate) (arg, mode))
+    return arg;
+  else
+    return copy_to_mode_reg (mode, arg);
+}
+
+
+/* Implementation of mrisc32_expand_builtin to take care of
+   1 result <- 2 args insns.  */
+
+static rtx
+mrisc32_expand_1r2a_builtin (enum insn_code icode, tree exp, rtx target)
+{
+  rtx pat;
+  rtx op0 = expand_normal (CALL_EXPR_ARG (exp, 0));
+  rtx op1 = expand_normal (CALL_EXPR_ARG (exp, 1));
+
+  target = mrisc32_legitimize_target (icode, target);
+  op0 = mrisc32_legitimize_argument (icode, 1, op0);
+  op1 = mrisc32_legitimize_argument (icode, 2, op1);
+
+  pat = GEN_FCN (icode) (target, op0, op1);
+  if (! pat)
+    return 0;
+
+  mrisc32_emit_insn_if_supported_by_target (pat);
+
+  return target;
+}
+
+/* Implementation of mrisc32_expand_builtin to take care of
+   1 result <- 1 arg insns.  */
+
+static rtx
+mrisc32_expand_1r1a_builtin (enum insn_code icode, tree exp,
+			     rtx target)
+{
+  rtx pat;
+  rtx op0 = expand_normal (CALL_EXPR_ARG (exp, 0));
+
+  target = mrisc32_legitimize_target (icode, target);
+  op0 = mrisc32_legitimize_argument (icode, 1, op0);
+
+  pat = GEN_FCN (icode) (target, op0);
+  if (! pat)
+    return 0;
+
+  mrisc32_emit_insn_if_supported_by_target (pat);
+
+  return target;
+}
+
+/* Implementation of mrisc32_expand_builtin to take care of
+   0 result <- 2 args insns.  */
+
+static rtx
+mrisc32_expand_0r2a_builtin (enum insn_code icode, tree exp)
+{
+  rtx pat;
+  rtx op0 = expand_normal (CALL_EXPR_ARG (exp, 0));
+  rtx op1 = expand_normal (CALL_EXPR_ARG (exp, 1));
+
+  op0 = mrisc32_legitimize_argument (icode, 0, op0);
+  op1 = mrisc32_legitimize_argument (icode, 1, op1);
+
+  pat = GEN_FCN (icode) (op0, op1);
+  if (! pat)
+    return 0;
+
+  mrisc32_emit_insn_if_supported_by_target (pat);
+
+  return 0;
+}
+
+/* Implementation of mrisc32_expand_builtin to take care of
+   0 result <- 0 args insns.  */
+
+static rtx
+mrisc32_expand_0r0a_builtin (enum insn_code icode, tree exp)
+{
+  rtx pat = GEN_FCN (icode) ();
+  if (! pat)
+    return 0;
+
+  mrisc32_emit_insn_if_supported_by_target (pat);
+
+  return 0;
+}
+
+/* Expand an expression EXP that calls a built-in function,
+   with result going to TARGET if that's convenient
+   (and in mode MODE if that's convenient).
+   SUBTARGET may be used as the target for computing one of EXP's operands.
+   IGNORE is nonzero if the value is to be ignored.  */
+
+static rtx
+mrisc32_expand_builtin (tree exp, rtx target,
+			rtx subtarget ATTRIBUTE_UNUSED,
+			machine_mode mode ATTRIBUTE_UNUSED,
+			int ignore ATTRIBUTE_UNUSED)
+{
+  size_t i;
+  const struct builtin_description *d;
+  tree fndecl = TREE_OPERAND (CALL_EXPR_FN (exp), 0);
+  unsigned int fcode = DECL_MD_FUNCTION_CODE (fndecl);
+
+  for (i = 0, d = bdesc_1res_2arg; i < ARRAY_SIZE (bdesc_1res_2arg); i++, d++)
+    if (d->code == fcode)
+      return mrisc32_expand_1r2a_builtin (d->icode, exp, target);
+
+  for (i = 0, d = bdesc_1res_1arg; i < ARRAY_SIZE (bdesc_1res_1arg); i++, d++)
+    if (d->code == fcode)
+      return mrisc32_expand_1r1a_builtin (d->icode, exp, target);
+
+  for (i = 0, d = bdesc_0res_2arg; i < ARRAY_SIZE (bdesc_0res_2arg); i++, d++)
+    if (d->code == fcode)
+      return mrisc32_expand_0r2a_builtin (d->icode, exp);
+
+  for (i = 0, d = bdesc_0res_0arg; i < ARRAY_SIZE (bdesc_0res_0arg); i++, d++)
+    if (d->code == fcode)
+      return mrisc32_expand_0r0a_builtin (d->icode, exp);
+
+  gcc_unreachable ();
+}
+
+
+/*******************************************************************/
+/* Initialize the GCC target structure.                            */
+/*******************************************************************/
 
 #undef  TARGET_PROMOTE_PROTOTYPES
 #define TARGET_PROMOTE_PROTOTYPES	hook_bool_const_tree_true
@@ -1839,6 +2146,15 @@ mrisc32_subreg_di_high (rtx op)
 
 #undef  TARGET_CONSTANT_ALIGNMENT
 #define TARGET_CONSTANT_ALIGNMENT constant_alignment_word_strings
+
+#undef TARGET_BUILD_BUILTIN_VA_LIST
+#define TARGET_BUILD_BUILTIN_VA_LIST mrisc32_build_builtin_va_list
+#undef TARGET_INIT_BUILTINS
+#define TARGET_INIT_BUILTINS mrisc32_init_builtins
+#undef TARGET_EXPAND_BUILTIN
+#define TARGET_EXPAND_BUILTIN mrisc32_expand_builtin
+#undef  TARGET_BUILTIN_DECL
+#define TARGET_BUILTIN_DECL mrisc32_builtin_decl
 
 struct gcc_target targetm = TARGET_INITIALIZER;
 

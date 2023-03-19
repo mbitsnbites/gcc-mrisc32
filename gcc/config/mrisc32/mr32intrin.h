@@ -70,18 +70,17 @@ typedef uint32_t float16x2_t;
 #define _MR32_INT8X4(a, b, c, d) _MR32_UINT8X4(a, b, c, d)
 #define _MR32_INT16X2(a, b) _MR32_UINT16X2(a, b)
 
-/* TODO(m): We currently use inline assembly to implement the intrinsics
-   functions. Ideally they should all be implemented as builtins.  */
+/* TODO(m): We currently use inline assembly to implement many of the
+   intrinsics functions. Use builtins instead.  */
 
-/* System Register (SR) manipulation.
-   Note: The SR number must be a numeric constant.  */
-static inline uint32_t _mr32_xchgsr(uint32_t val, const uint32_t sr) { uint32_t r; __asm__ ("xchgsr\t%0, %1, #%2" : "=r"(r) : "r"(val), "i"(sr)); return r; }
-static inline uint32_t _mr32_getsr(const uint32_t sr) { uint32_t r; __asm__ ("getsr\t%0, #%1" : "=r"(r) : "i"(sr)); return r; }
-static inline void _mr32_setsr(uint32_t val, const uint32_t sr) { __asm__ ("setsr\t%0, #%1" : : "r"(val), "i"(sr)); }
+/* System Register (SR) manipulation. */
+static inline uint32_t _mr32_xchgsr(uint32_t val, uint32_t sr) { return __builtin_mrisc32_xchgsr(val, sr); }
+static inline uint32_t _mr32_getsr(uint32_t sr) { return __builtin_mrisc32_getsr(sr); }
+static inline void _mr32_setsr(uint32_t val, uint32_t sr) { __builtin_mrisc32_setsr(val, sr); }
 
 /* Execution and cache control instructions.  */
-static inline void _mr32_sync(void) { __asm__ volatile ("sync" : : ); }
-static inline uint32_t _mr32_cctrl(uint32_t a, const uint32_t ctrl) { __asm__ volatile ("cctrl\t%0, %1" : "+r"(a) : "r"(ctrl)); return a; }
+static inline void _mr32_sync(void) { __builtin_mrisc32_sync(); }
+static inline uint32_t _mr32_cctrl(uint32_t a, const uint32_t ctrl) { return __builtin_mrisc32_cctrl(a, ctrl); }
 
 #ifdef __MRISC32_PACKED_OPS__
 static inline int8x4_t _mr32_add_b(int8x4_t a, int8x4_t b) { int8x4_t r; __asm__ ("add.b\t%0, %1, %2" : "=r"(r) : "r"(a), "r"(b)); return r; }
@@ -215,14 +214,14 @@ static inline uint16x2_t _mr32_remu_h(uint16x2_t a, uint16x2_t b) { uint16x2_t r
 #endif  /* __MRISC32_DIV__  */
 
 #ifdef __MRISC32_SATURATING_OPS__
-static inline int32_t _mr32_adds(int32_t a, int32_t b) { int32_t r; __asm__ ("adds\t%0, %1, %2" : "=r"(r) : "r"(a), "r"(b)); return r; }
-static inline uint32_t _mr32_addsu(uint32_t a, uint32_t b) { uint32_t r; __asm__ ("addsu\t%0, %1, %2" : "=r"(r) : "r"(a), "r"(b)); return r; }
+static inline int32_t _mr32_adds(int32_t a, int32_t b) { return __builtin_mrisc32_adds(a, b); }
+static inline uint32_t _mr32_addsu(uint32_t a, uint32_t b) { return __builtin_mrisc32_addsu(a, b); }
 static inline int32_t _mr32_addh(int32_t a, int32_t b) { int32_t r; __asm__ ("addh\t%0, %1, %2" : "=r"(r) : "r"(a), "r"(b)); return r; }
 static inline uint32_t _mr32_addhu(uint32_t a, uint32_t b) { uint32_t r; __asm__ ("addhu\t%0, %1, %2" : "=r"(r) : "r"(a), "r"(b)); return r; }
 static inline int32_t _mr32_addhr(int32_t a, int32_t b) { int32_t r; __asm__ ("addhr\t%0, %1, %2" : "=r"(r) : "r"(a), "r"(b)); return r; }
 static inline uint32_t _mr32_addhur(uint32_t a, uint32_t b) { uint32_t r; __asm__ ("addhur\t%0, %1, %2" : "=r"(r) : "r"(a), "r"(b)); return r; }
-static inline int32_t _mr32_subs(int32_t a, int32_t b) { int32_t r; __asm__ ("subs\t%0, %1, %2" : "=r"(r) : "r"(a), "r"(b)); return r; }
-static inline uint32_t _mr32_subsu(uint32_t a, uint32_t b) { uint32_t r; __asm__ ("subsu\t%0, %1, %2" : "=r"(r) : "r"(a), "r"(b)); return r; }
+static inline int32_t _mr32_subs(int32_t a, int32_t b) { return __builtin_mrisc32_subs(a, b); }
+static inline uint32_t _mr32_subsu(uint32_t a, uint32_t b) { return __builtin_mrisc32_subsu(a, b); }
 static inline int32_t _mr32_subh(int32_t a, int32_t b) { int32_t r; __asm__ ("subh\t%0, %1, %2" : "=r"(r) : "r"(a), "r"(b)); return r; }
 static inline uint32_t _mr32_subhu(uint32_t a, uint32_t b) { uint32_t r; __asm__ ("subhu\t%0, %1, %2" : "=r"(r) : "r"(a), "r"(b)); return r; }
 static inline int32_t _mr32_subhr(int32_t a, int32_t b) { int32_t r; __asm__ ("subhr\t%0, %1, %2" : "=r"(r) : "r"(a), "r"(b)); return r; }
@@ -263,7 +262,7 @@ static inline int16x2_t _mr32_mulqr_h(int16x2_t a, int16x2_t b) { int16x2_t r; _
 
 static inline uint32_t _mr32_clz(uint32_t a) { return __builtin_clz(a); }
 static inline uint32_t _mr32_popcnt(uint32_t a) { return __builtin_popcount(a); }
-static inline uint32_t _mr32_rev(uint32_t a) { uint32_t r; __asm__ ("rev\t%0, %1" : "=r"(r) : "r"(a)); return r; }
+static inline uint32_t _mr32_rev(uint32_t a) { return __builtin_mrisc32_rev(a); }
 #ifdef __MRISC32_PACKED_OPS__
 static inline uint8x4_t _mr32_clz_b(uint8x4_t a) { uint8x4_t r; __asm__ ("clz.b\t%0, %1" : "=r"(r) : "r"(a)); return r; }
 static inline uint16x2_t _mr32_clz_h(uint16x2_t a) { uint16x2_t r; __asm__ ("clz.h\t%0, %1" : "=r"(r) : "r"(a)); return r; }
@@ -273,12 +272,12 @@ static inline uint8x4_t _mr32_rev_b(uint8x4_t a) { uint8x4_t r; __asm__ ("rev.b\
 static inline uint16x2_t _mr32_rev_h(uint16x2_t a) { uint16x2_t r; __asm__ ("rev.h\t%0, %1" : "=r"(r) : "r"(a)); return r; }
 #endif  /* __MRISC32_PACKED_OPS__  */
 
-static inline uint32_t _mr32_crc32c_8(uint32_t crc, const uint32_t data) { __asm__ volatile ("crc32c.8\t%0, %1" : "+r"(crc) : "r"(data)); return crc; }
-static inline uint32_t _mr32_crc32c_16(uint32_t crc, const uint32_t data) { __asm__ volatile ("crc32c.16\t%0, %1" : "+r"(crc) : "r"(data)); return crc; }
-static inline uint32_t _mr32_crc32c_32(uint32_t crc, const uint32_t data) { __asm__ volatile ("crc32c.32\t%0, %1" : "+r"(crc) : "r"(data)); return crc; }
-static inline uint32_t _mr32_crc32_8(uint32_t crc, const uint32_t data) { __asm__ volatile ("crc32.8\t%0, %1" : "+r"(crc) : "r"(data)); return crc; }
-static inline uint32_t _mr32_crc32_16(uint32_t crc, const uint32_t data) { __asm__ volatile ("crc32.16\t%0, %1" : "+r"(crc) : "r"(data)); return crc; }
-static inline uint32_t _mr32_crc32_32(uint32_t crc, const uint32_t data) { __asm__ volatile ("crc32.32\t%0, %1" : "+r"(crc) : "r"(data)); return crc; }
+static inline uint32_t _mr32_crc32c_8(uint32_t crc, const uint32_t data) { return __builtin_mrisc32_crc32c_8(crc, data); }
+static inline uint32_t _mr32_crc32c_16(uint32_t crc, const uint32_t data) { return __builtin_mrisc32_crc32c_16(crc, data); }
+static inline uint32_t _mr32_crc32c_32(uint32_t crc, const uint32_t data) { return __builtin_mrisc32_crc32c_32(crc, data); }
+static inline uint32_t _mr32_crc32_8(uint32_t crc, const uint32_t data) { return __builtin_mrisc32_crc32_8(crc, data); }
+static inline uint32_t _mr32_crc32_16(uint32_t crc, const uint32_t data) { return __builtin_mrisc32_crc32_16(crc, data); }
+static inline uint32_t _mr32_crc32_32(uint32_t crc, const uint32_t data) { return __builtin_mrisc32_crc32_32(crc, data); }
 
 #ifdef __MRISC32_HARD_FLOAT__
 static inline float _mr32_fmin(float a, float b) { float r; __asm__ ("fmin\t%0, %1, %2" : "=r"(r) : "r"(a), "r"(b)); return r; }

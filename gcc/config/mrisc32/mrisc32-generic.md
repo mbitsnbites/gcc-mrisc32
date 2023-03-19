@@ -30,10 +30,11 @@
 (define_cpu_unit "gen_div,gen_div2,gen_div3" "generic")
 (define_cpu_unit "gen_fpu" "generic")
 (define_cpu_unit "gen_sau" "generic")
+(define_cpu_unit "gen_ctrl" "generic")
 
 (define_insn_reservation "generic_alu" 1
   (and (eq_attr "tune" "generic")
-       (eq_attr "type" "unknown,const,nop,arith,logical,shift,shuf,cmp,move"))
+       (eq_attr "type" "unknown,const,nop,arith,logical,shift,shuf,crc,cmp,move"))
   "gen_issue,gen_alu")
 
 (define_insn_reservation "generic_load" 2
@@ -85,6 +86,11 @@
   (and (eq_attr "tune" "generic")
        (eq_attr "type" "saturating"))
   "gen_issue,gen_sau")
+
+(define_insn_reservation "generic_ctrl" 1
+  (and (eq_attr "tune" "generic")
+       (eq_attr "type" "xchgsr,sync,cctrl"))
+  "gen_issue,gen_ctrl")
 
 
 ;; These represent special instruction combinations, where one insn is

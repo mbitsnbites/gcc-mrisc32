@@ -92,10 +92,6 @@
   ]
 )
 
-(define_c_enum "unspec" [
-   UNSPEC_REV
-])
-
 
 ;; -------------------------------------------------------------------------
 ;; MRISC32 specific constraints and predicates
@@ -141,11 +137,12 @@
 ;; Different instruction types.
 (define_attr "type"
   "unknown,const,nop,
-   arith,logical,shift,shuf,cmp,move,load,store,
+   arith,logical,shift,shuf,crc,cmp,move,load,store,
    branch,jump,call,ret,
    imul,idiv,
    fadd,fmul,fdiv,ftoi,itof,fcmp,fminmax,
    saturating,
+   xchgsr,sync,cctrl,
    alu_alu"
   (const_string "unknown"))
 
@@ -956,13 +953,6 @@
   ""
   "clz\t%0, %1"
    [(set_attr "type" "logical")])
-
-(define_insn "mrisc32_revsi2"
-  [(set (match_operand:SI 0 "register_operand" "=r")
-	(unspec:SI [(match_operand:SI 1 "register_operand" "r")] UNSPEC_REV))]
-  ""
-  "rev\t%0, %1"
-  [(set_attr "type" "logical")])
 
 (define_insn_and_split "ctzsi2"
  [(set (match_operand:SI 0 "register_operand" "=r")
@@ -1873,6 +1863,14 @@
   mrisc32_expand_epilogue ();
   DONE;
 })
+
+
+;; -------------------------------------------------------------------------
+;; Builtins
+;; -------------------------------------------------------------------------
+
+(include "mrisc32-builtins.md")
+
 
 ;; -------------------------------------------------------------------------
 ;; Tuning
