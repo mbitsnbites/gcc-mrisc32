@@ -1,3 +1,5 @@
+## This repo has moved to: https://gitlab.com/mrisc32/gcc-mrisc32
+
 # gcc for MRISC32
 
 This is a fork of [gcc](https://github.com/gcc-mirror/gcc) with support for [MRISC32](https://github.com/mrisc32/mrisc32).
